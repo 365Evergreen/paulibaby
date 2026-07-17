@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import './App.css'
+import { HashRouter, Route, Routes } from 'react-router-dom'
+import styles from './App.module.css'
+import Header from './components/Header'
+import HomePage from './components/HomePage'
+import BlogArchivePage from './components/BlogArchivePage'
+import SinglePostPage from './components/SinglePostPage'
 import { fetchPosts, getBlogContainerUrl } from './lib/azureBlog'
 
 const siteTitle = import.meta.env.VITE_SITE_TITLE || 'Pauli Baby'
@@ -9,27 +14,47 @@ const siteIntro =
   import.meta.env.VITE_SITE_INTRO ||
   'Publish each post as a JSON blob, and this site will automatically load the newest entries from your Azure container.'
 
-function formatDate(value) {
-  if (!value) {
-    return 'Draft'
-  }
+const fallbackPosts = [
+  {
+    slug: 'welcome-to-the-new-site',
+    title: 'Welcome to the new site experience',
+    excerpt: 'A polished layout for landing, archive, and story pages with a reusable video component.',
+    publishedAt: '2026-07-01',
+    author: 'Pauli Baby',
+    tags: ['design', 'launch'],
+    paragraphs: [
+      'This fresh layout gives the site a dedicated landing page, an archive view, and an article-style reading experience.',
+      'The header and footer are intentionally simple so that future content can take center stage.',
+    ],
+  },
+  {
+    slug: 'building-with-azure-blob-storage',
+    title: 'Building with Azure Blob Storage',
+    excerpt: 'Use JSON blobs as content entries and let a lightweight frontend render each piece with strong defaults.',
+    publishedAt: '2026-06-24',
+    author: 'Pauli Baby',
+    tags: ['azure', 'cms'],
+    paragraphs: [
+      'Azure Blob Storage is a practical publishing backend for a small personal site because it stays simple and fairly low-friction.',
+      'JSON blobs remain portable and the frontend can transform them into polished stories without much ceremony.',
+    ],
+  },
+  {
+    slug: 'designing-for-quiet-reading',
+    title: 'Designing for quiet reading',
+    excerpt: 'A calm visual language helps the content breathe and keeps the browsing experience clear.',
+    publishedAt: '2026-06-10',
+    author: 'Pauli Baby',
+    tags: ['ux', 'writing'],
+    paragraphs: [
+      'Readable type, generous spacing, and a clear visual hierarchy make the experience feel calm rather than crowded.',
+      'That same approach applies equally well to the landing page, archive, and single-post view.',
+    ],
+  },
+]
 
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(date)
-}
-
-function App() {
+function AppContent() {
   const [posts, setPosts] = useState([])
-  const [selectedSlug, setSelectedSlug] = useState('')
   const [loading, setLoading] = useState(Boolean(getBlogContainerUrl()))
   const [error, setError] = useState('')
 
@@ -50,7 +75,6 @@ function App() {
         }
 
         setPosts(nextPosts)
-        setSelectedSlug((currentSlug) => currentSlug || nextPosts[0]?.slug || '')
       } catch (loadError) {
         if (!isMounted) {
           return
@@ -71,104 +95,42 @@ function App() {
     }
   }, [])
 
-  const selectedPost = useMemo(
-    () => posts.find((post) => post.slug === selectedSlug) ?? posts[0],
-    [posts, selectedSlug],
-  )
-
+  const displayPosts = useMemo(() => (posts.length ? posts : fallbackPosts), [posts])
   const hasContainer = Boolean(getBlogContainerUrl())
+  const featuredPost = displayPosts[0]
 
   return (
-    <main className="app-shell">
-      <section className="hero-panel">
-        <p className="eyebrow">Personal blog</p>
-        <h1>{siteTitle}</h1>
-        <p className="tagline">{siteTagline}</p>
-        <p className="intro">{siteIntro}</p>
-        <div className="status-card">
-          {!hasContainer && (
-            <>
-              <h2>Connect your Azure Blob CMS</h2>
-              <p>
-                Set <code>VITE_AZURE_BLOG_CONTAINER_URL</code> to a public or SAS-enabled blob container URL to load
-                your posts.
-              </p>
-            </>
-          )}
-          {hasContainer && loading && <p>Loading posts from Azure Blob Storage…</p>}
-          {hasContainer && !loading && error && (
-            <>
-              <h2>We couldn&apos;t load the blog content.</h2>
-              <p>{error}</p>
-            </>
-          )}
-          {hasContainer && !loading && !error && !posts.length && (
-            <>
-              <h2>No posts found yet</h2>
-              <p>Add one or more <code>.json</code> blobs to your container to populate the blog.</p>
-            </>
-          )}
-          {hasContainer && !loading && !error && Boolean(posts.length) && (
-            <>
-              <h2>{posts.length} post{posts.length === 1 ? '' : 's'} published</h2>
-              <p>The newest post opens automatically, and visitors can browse older entries from the list below.</p>
-            </>
-          )}
-        </div>
-      </section>
+    <main className={styles.appShell}>
+      <Header siteTitle={siteTitle} siteTagline={siteTagline} />
 
-      <section className="content-grid" aria-label="Blog content">
-        <aside className="sidebar-panel">
-          <div className="panel-heading">
-            <h2>Posts</h2>
-            <p>Stored as JSON blobs in Azure.</p>
-          </div>
-          <div className="post-list" role="list">
-            {posts.map((post) => {
-              const isActive = post.slug === selectedPost?.slug
+      {hasContainer && loading ? <div className={styles.banner}>Loading posts from Azure Blob Storage…</div> : null}
+      {hasContainer && error ? <div className={styles.bannerError}>{error}</div> : null}
+      {!hasContainer ? <div className={styles.banner}>Set VITE_AZURE_BLOG_CONTAINER_URL to connect your Azure Blob CMS.</div> : null}
 
-              return (
-                <button
-                  key={post.slug}
-                  type="button"
-                  className={`post-link${isActive ? ' is-active' : ''}`}
-                  onClick={() => setSelectedSlug(post.slug)}
-                >
-                  <span className="post-date">{formatDate(post.publishedAt)}</span>
-                  <span className="post-title">{post.title}</span>
-                  <span className="post-excerpt">{post.excerpt}</span>
-                </button>
-              )
-            })}
-          </div>
-        </aside>
-
-        <article className="article-panel">
-          {selectedPost ? (
-            <>
-              <div className="article-meta">
-                <p className="eyebrow">{formatDate(selectedPost.publishedAt)}</p>
-                <h2>{selectedPost.title}</h2>
-                <p>
-                  By {selectedPost.author}
-                  {selectedPost.tags.length ? ` • ${selectedPost.tags.join(' • ')}` : ''}
-                </p>
-              </div>
-              <div className="article-body">
-                {selectedPost.paragraphs.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="empty-state">
-              <h2>Ready for your first post</h2>
-              <p>Once your Azure container is connected, published entries will appear here.</p>
-            </div>
-          )}
-        </article>
-      </section>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <HomePage
+              posts={displayPosts}
+              featuredPost={featuredPost}
+              siteTitle={siteTitle}
+              siteIntro={siteIntro}
+            />
+          }
+        />
+        <Route path="/blog" element={<BlogArchivePage posts={displayPosts} />} />
+        <Route path="/blog/:slug" element={<SinglePostPage posts={displayPosts} />} />
+      </Routes>
     </main>
+  )
+}
+
+function App() {
+  return (
+    <HashRouter>
+      <AppContent />
+    </HashRouter>
   )
 }
 

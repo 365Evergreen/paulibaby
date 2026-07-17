@@ -1,0 +1,16 @@
+.player {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.video {
+  width: 100%;
+  border-radius: 18px;
+  background: #111827;
+}
+
+.caption {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
