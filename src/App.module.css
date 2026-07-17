@@ -1,0 +1,27 @@
+.appShell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+  display: grid;
+  gap: 20px;
+}
+
+.banner,
+.bannerError {
+  padding: 16px 20px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+}
+
+.bannerError {
+  border-color: rgba(215, 83, 83, 0.4);
+  color: #9b2c2c;
+}
+
+@media (max-width: 640px) {
+  .appShell {
+    padding: 0 16px 48px;
+  }
+}
