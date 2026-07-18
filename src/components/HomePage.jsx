@@ -27,7 +27,6 @@ function HomePage({ posts, featuredPost, siteTitle, siteIntro }) {
     <section className={styles.page}>
       <section className={styles.heroSection}>
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>Stories, notes, and product thinking</p>
           <h1>{siteTitle}</h1>
           <p className={styles.lead}>{siteIntro}</p>
           <div className={styles.ctaRow}>
