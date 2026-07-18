@@ -12,15 +12,6 @@
   margin-bottom: 32px;
 }
 
-.eyebrow {
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-
 .tagline {
   font-size: 1.25rem;
   color: var(--text-h);
